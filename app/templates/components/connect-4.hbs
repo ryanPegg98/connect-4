@@ -1,0 +1,25 @@
+<div class="game_board">
+  <canvas id="stage" width="420" height="360"></canvas>
+  {{#if playing}}
+    {{#if winner}}
+      <div class="winner_screen">
+        <p>{{ winner }}</p>
+        <p>won!</p>
+      </div>
+    {{/if}}
+    {{#if draw}}
+      <div class="winner_screen">
+        <p>We'll call it a draw.</p>
+      </div>
+    {{/if}}
+  {{else}}
+    <div class="winner_screen">
+      <p>Are you ready to start?</p>
+    </div>
+  {{/if}}
+</div>
+{{#if playing}}
+  <button {{action "start"}} class="restart">Restart</button>
+{{else}}
+  <button {{action "start"}}>Start</button>
+{{/if}}

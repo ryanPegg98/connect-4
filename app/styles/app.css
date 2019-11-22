@@ -1,0 +1,110 @@
+/** Bring in a google font to enhance the UI */
+@import url('https://fonts.googleapis.com/css?family=Russo+One&display=swap');
+
+/* I want the background to be a dark grey/navy */
+BODY {
+  background-color: #1C242F;
+  font-family: 'Russo One', Arial, sans-serif;
+  font-size: 16px;
+}
+
+HEADER {
+  background-color: #004175;
+  border: 1px solid #004175;
+  text-align: center;
+  font-size: 2.5rem;
+  color: #FFF;
+  text-shadow: 0px 0px 10px #555;
+}
+
+HEADER H1 {
+  margin: 0;
+  padding: 20px;
+}
+
+SECTION {
+  min-width: 475px;
+  max-width: 500px;
+  margin: 0 auto;
+  background-color: #EFEFEF;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  /* The section should be in the centre of the page */
+  transform: translate(-50%, -50%);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+SECTION DIV {
+  text-align: center;
+}
+
+/* The canvas will have the circle drawn on */
+SECTION CANVAS {
+  background-color: #114FA5;
+  border: 10px solid #114FA5;
+  border-radius: 10px;
+  margin: 20px 0px;
+}
+
+BUTTON {
+  width: 100%;
+  background-color: #00C340;
+  border: none;
+  font-weight: 700;
+  font-size: 25px;
+  color: #FFF;
+  text-shadow: 0px 0px 5px #555;
+  padding: 20px;
+  box-sizing: border-box;
+  cursor: pointer;
+  font-family: 'Russo One', Arial, sans-serif;
+  outline: none;
+}
+
+BUTTON:hover {
+  background-color: #33CF66;
+  transition: 0.3s;
+}
+
+BUTTON.restart {
+  background-color: #FFB200;
+}
+
+.game_board {
+  position: relative;
+}
+
+.winner_screen {
+  position: absolute;
+  background-color: rgba(0, 35, 63, 0.9);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  color: #FFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  text-shadow: 0px 0px 10px #000;
+  flex-direction: column;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.winner_screen P {
+  margin: 0;
+  padding: 0;
+}
+
+.winner_screen.red > P:first-child {
+  color: #FF2B47;
+  font-size: 3rem;
+}
+
+.winner_screen.yellow > P:first-child {
+  color: #FFF240;
+  font-size: 3rem;
+}

@@ -47,5 +47,10 @@
   },
   "engines": {
     "node": "6.* || 8.* || >= 10.*"
+  },
+  "dependencies": {
+    "easeljs": "^1.0.2",
+    "soundjs": "^1.0.1",
+    "tweenjs": "^1.0.2"
   }
 }

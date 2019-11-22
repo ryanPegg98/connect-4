@@ -102,9 +102,11 @@ BUTTON.restart {
 .winner_screen.red > P:first-child {
   color: #FF2B47;
   font-size: 3rem;
+  text-transform: capitalize;
 }
 
 .winner_screen.yellow > P:first-child {
   color: #FFF240;
   font-size: 3rem;
+  text-transform: capitalize;
 }

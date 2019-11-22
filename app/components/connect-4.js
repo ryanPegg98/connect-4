@@ -6,6 +6,19 @@ export default Component.extend({
   winner: undefined,
   draw: false,
 
+  /*
+    This will be how the sounds are imported into the application and used by Sound JS
+  */
+  init: function(){
+    this._super(...arguments);
+    createjs.Sound.registerSound("assets/sounds/dropping.wav", "dropping");
+    createjs.Sound.registerSound("assets/sounds/woosh.wav", "woosh");
+  },
+
+  /*
+    This will create board for the game using create JS. This whole method will complete
+    FT1 and set the stage for all of the future work
+  */
   didInsertElement: function(){
     // Define the element where the borad will be drawn onto
     var stage = new createjs.Stage(this.$('#stage')[0]);
@@ -69,12 +82,18 @@ export default Component.extend({
     this.set('counters', counters);
     this.set('stage', stage);
 
-
-
     // Update the drawing
     createjs.Ticker.addEventListener('tick', stage);
   },
 
+  /*
+    This will handle the click function
+
+    It will need to find the correct co-ordinates for the counter to place
+    depending on the location within the canvas the user clicks
+
+    It will animate the counters being placed and make a sound
+  */
   click: function(ev){
     // Check that they are playing and that someone has not won yet
     if(this.get('playing') && !this.get('winner')){
@@ -109,7 +128,10 @@ export default Component.extend({
           counter.visible = true;
           // Fade the counter into the correct place
           createjs.Tween.get(counter).to({alpha: 1}, 500);
+          createjs.Sound.play("dropping");
 
+          // Check for the winner
+          this.check_winner();
 
           // Increment that players move
           this.get('moves')[player] = moveCounter + 1;
@@ -125,17 +147,147 @@ export default Component.extend({
     }
   },
 
-  actions: {
-    start: function(){
-      // Fetch the stored board
-      var board = this.get('board');
+  /*
+    This method will try and find the winner of the game or
+    return a draw if all the slots have been filled.
+  */
 
+  check_winner: function(){
+    // These are all the ways that a player could win
+    var winning_patterns = [
+      [[0, 0], [0, 1], [0, 2], [0, 3]],
+      [[0, 1], [0, 2], [0, 3], [0, 4]],
+      [[0, 2], [0, 3], [0, 4], [0, 5]],
+      [[0, 3], [0, 4], [0, 5], [0, 6]],
+      [[1, 0], [1, 1], [1, 2], [1, 3]],
+      [[1, 1], [1, 2], [1, 3], [1, 4]],
+      [[1, 2], [1, 3], [1, 4], [1, 5]],
+      [[1, 3], [1, 4], [1, 5], [1, 6]],
+      [[2, 0], [2, 1], [2, 2], [2, 3]],
+      [[2, 1], [2, 2], [2, 3], [2, 4]],
+      [[2, 2], [2, 3], [2, 4], [2, 5]],
+      [[2, 3], [2, 4], [2, 5], [2, 6]],
+      [[3, 0], [3, 1], [3, 2], [3, 3]],
+      [[3, 1], [3, 2], [3, 3], [3, 4]],
+      [[3, 2], [3, 3], [3, 4], [3, 5]],
+      [[3, 3], [3, 4], [3, 5], [3, 6]],
+      [[4, 0], [4, 1], [4, 2], [4, 3]],
+      [[4, 1], [4, 2], [4, 3], [4, 4]],
+      [[4, 2], [4, 3], [4, 4], [4, 5]],
+      [[4, 3], [4, 4], [4, 5], [4, 6]],
+      [[5, 0], [5, 1], [5, 2], [5, 3]],
+      [[5, 1], [5, 2], [5, 3], [5, 4]],
+      [[5, 2], [5, 3], [5, 4], [5, 5]],
+      [[5, 3], [5, 4], [5, 5], [5, 6]],
+      [[0, 0], [1, 0], [2, 0], [3, 0]],
+      [[1, 0], [2, 0], [3, 0], [4, 0]],
+      [[2, 0], [3, 0], [4, 0], [5, 0]],
+      [[0, 1], [1, 1], [2, 1], [3, 1]],
+      [[1, 1], [2, 1], [3, 1], [4, 1]],
+      [[2, 1], [3, 1], [4, 1], [5, 1]],
+      [[0, 2], [1, 2], [2, 2], [3, 2]],
+      [[1, 2], [2, 2], [3, 2], [4, 2]],
+      [[2, 2], [3, 2], [4, 2], [5, 2]],
+      [[0, 3], [1, 3], [2, 3], [3, 3]],
+      [[1, 3], [2, 3], [3, 3], [4, 3]],
+      [[2, 3], [3, 3], [4, 3], [5, 3]],
+      [[0, 4], [1, 4], [2, 4], [3, 4]],
+      [[1, 4], [2, 4], [3, 4], [4, 4]],
+      [[2, 4], [3, 4], [4, 4], [5, 4]],
+      [[0, 5], [1, 5], [2, 5], [3, 5]],
+      [[1, 5], [2, 5], [3, 5], [4, 5]],
+      [[2, 5], [3, 5], [4, 5], [5, 5]],
+      [[0, 6], [1, 6], [2, 6], [3, 6]],
+      [[1, 6], [2, 6], [3, 6], [4, 6]],
+      [[2, 6], [3, 6], [4, 6], [5, 6]],
+      [[0, 2], [1, 3], [2, 4], [3, 5]],
+      [[0, 1], [1, 2], [2, 3], [3, 4]],
+      [[1, 2], [2, 3], [3, 4], [4, 5]],
+      [[0, 0], [1, 1], [2, 2], [3, 3]],
+      [[1, 1], [2, 2], [3, 3], [4, 4]],
+      [[2, 2], [3, 3], [4, 4], [5, 5]],
+      [[1, 0], [2, 1], [3, 2], [4, 3]],
+      [[2, 1], [3, 2], [4, 3], [5, 4]],
+      [[3, 2], [4, 3], [5, 4], [6, 5]],
+      [[2, 0], [3, 1], [4, 2], [5, 3]],
+      [[3, 1], [4, 2], [5, 3], [6, 4]],
+      [[3, 0], [4, 1], [5, 2], [6, 3]],
+      [[3, 0], [2, 1], [1, 2], [0, 3]],
+      [[4, 0], [3, 1], [2, 2], [1, 3]],
+      [[3, 1], [2, 2], [1, 3], [0, 4]],
+      [[5, 0], [4, 1], [3, 2], [2, 3]],
+      [[4, 1], [3, 2], [2, 3], [1, 4]],
+      [[3, 2], [2, 3], [1, 4], [0, 5]],
+      [[6, 0], [5, 1], [4, 2], [3, 3]],
+      [[5, 1], [4, 2], [3, 3], [2, 4]],
+      [[4, 2], [3, 3], [2, 4], [1, 5]],
+      [[6, 1], [5, 2], [4, 3], [3, 4]],
+      [[5, 2], [4, 3], [3, 4], [2, 5]],
+      [[6, 2], [5, 3], [4, 4], [3, 5]],
+    ];
+    // Grab the current state
+    var state = this.get('state');
+    // Loop over all of the patterns that would win the game
+    for(var pidx = 0; pidx < winning_patterns.length; pidx++){
+      // Get the current pattern to check for
+      var pattern = winning_patterns[pidx];
+
+      // Select the user in the current slot
+      var winner = state[pattern[0][0]][pattern[0][1]];
+      // If the first record in the pattern has a value then test the pattern
+      // If there is no player in that area there is no reason to test
+      if(winner){
+        // Loop over the patterns other slots
+        for(var idx = 1; idx < pattern.length; idx++){
+          // If the winner is not equal to the player in the slot then that is not a winning pattern
+          if(winner != state[pattern[idx][0]][pattern[idx][1]]) {
+            // Set the winner to undefined and break the loop so it moves on the the next pattern
+            winner = undefined;
+            break;
+          }
+        }
+        // Check that the winner is still present
+        if(winner){
+          // Set the global variable to be the correct winner
+          this.set('winner', winner);
+          // Break the loop as a winner has been found
+          break;
+        }
+      }
+    }
+    // If there is no winner, check for a draw
+    if(!this.get('winner')){
+      // Initiall set it to true
+      var draw = true;
+      // Loop over all of the columns
+      for(var x = 0; x <= 6; x++){
+        // Loop over all of the rows
+        for(var y = 0; y <= 5; y++){
+          // If one does not have a value then the game is still in motion
+          if(!state[x][y]){
+            // Set draw to false and break the rows loop
+            draw = false;
+            break;
+          }
+        }
+      }
+      // Set the draw value to be be the same as the variable
+      this.set('draw', draw);
+    }
+  },
+
+  actions: {
+    /*
+      This will start the game, clear the board and reset all the states
+    */
+    start: function(){
       if(this.get('playing')){
         var counters = this.get('counters');
         for(var idx = 0; idx < 21; idx++){
           createjs.Tween.get(counters.red[idx]).to({alpha: 0}, 500);
           createjs.Tween.get(counters.yellow[idx]).to({alpha: 0}, 500);
         }
+        createjs.Sound.play("woosh");
       }
 
       // Set the state that will show which player has a counter in that area

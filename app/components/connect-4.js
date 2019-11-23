@@ -1,5 +1,213 @@
 import Component from '@ember/component';
 
+/*
+  This method will clone the current state so that the computer player
+  can make a better move
+*/
+
+function deepClone(state){
+  var new_state = [];
+  for(var idx = 0; idx < state.length; idx++){
+    new_state.push(state[idx].slice(0));
+  }
+  return new_state;
+}
+
+/*
+  Method to check who has won the game or if it is a draw
+*/
+
+function check_game_winner(state){
+  // These are all the ways that a player could win
+  var winning_patterns = [
+    [[0, 0], [0, 1], [0, 2], [0, 3]],
+    [[0, 1], [0, 2], [0, 3], [0, 4]],
+    [[0, 2], [0, 3], [0, 4], [0, 5]],
+    [[0, 3], [0, 4], [0, 5], [0, 6]],
+    [[1, 0], [1, 1], [1, 2], [1, 3]],
+    [[1, 1], [1, 2], [1, 3], [1, 4]],
+    [[1, 2], [1, 3], [1, 4], [1, 5]],
+    [[1, 3], [1, 4], [1, 5], [1, 6]],
+    [[2, 0], [2, 1], [2, 2], [2, 3]],
+    [[2, 1], [2, 2], [2, 3], [2, 4]],
+    [[2, 2], [2, 3], [2, 4], [2, 5]],
+    [[2, 3], [2, 4], [2, 5], [2, 6]],
+    [[3, 0], [3, 1], [3, 2], [3, 3]],
+    [[3, 1], [3, 2], [3, 3], [3, 4]],
+    [[3, 2], [3, 3], [3, 4], [3, 5]],
+    [[3, 3], [3, 4], [3, 5], [3, 6]],
+    [[4, 0], [4, 1], [4, 2], [4, 3]],
+    [[4, 1], [4, 2], [4, 3], [4, 4]],
+    [[4, 2], [4, 3], [4, 4], [4, 5]],
+    [[4, 3], [4, 4], [4, 5], [4, 6]],
+    [[5, 0], [5, 1], [5, 2], [5, 3]],
+    [[5, 1], [5, 2], [5, 3], [5, 4]],
+    [[5, 2], [5, 3], [5, 4], [5, 5]],
+    [[5, 3], [5, 4], [5, 5], [5, 6]],
+    [[0, 0], [1, 0], [2, 0], [3, 0]],
+    [[1, 0], [2, 0], [3, 0], [4, 0]],
+    [[2, 0], [3, 0], [4, 0], [5, 0]],
+    [[0, 1], [1, 1], [2, 1], [3, 1]],
+    [[1, 1], [2, 1], [3, 1], [4, 1]],
+    [[2, 1], [3, 1], [4, 1], [5, 1]],
+    [[0, 2], [1, 2], [2, 2], [3, 2]],
+    [[1, 2], [2, 2], [3, 2], [4, 2]],
+    [[2, 2], [3, 2], [4, 2], [5, 2]],
+    [[0, 3], [1, 3], [2, 3], [3, 3]],
+    [[1, 3], [2, 3], [3, 3], [4, 3]],
+    [[2, 3], [3, 3], [4, 3], [5, 3]],
+    [[0, 4], [1, 4], [2, 4], [3, 4]],
+    [[1, 4], [2, 4], [3, 4], [4, 4]],
+    [[2, 4], [3, 4], [4, 4], [5, 4]],
+    [[0, 5], [1, 5], [2, 5], [3, 5]],
+    [[1, 5], [2, 5], [3, 5], [4, 5]],
+    [[2, 5], [3, 5], [4, 5], [5, 5]],
+    [[0, 6], [1, 6], [2, 6], [3, 6]],
+    [[1, 6], [2, 6], [3, 6], [4, 6]],
+    [[2, 6], [3, 6], [4, 6], [5, 6]],
+    [[0, 2], [1, 3], [2, 4], [3, 5]],
+    [[0, 1], [1, 2], [2, 3], [3, 4]],
+    [[1, 2], [2, 3], [3, 4], [4, 5]],
+    [[0, 0], [1, 1], [2, 2], [3, 3]],
+    [[1, 1], [2, 2], [3, 3], [4, 4]],
+    [[2, 2], [3, 3], [4, 4], [5, 5]],
+    [[1, 0], [2, 1], [3, 2], [4, 3]],
+    [[2, 1], [3, 2], [4, 3], [5, 4]],
+    [[3, 2], [4, 3], [5, 4], [6, 5]],
+    [[2, 0], [3, 1], [4, 2], [5, 3]],
+    [[3, 1], [4, 2], [5, 3], [6, 4]],
+    [[3, 0], [4, 1], [5, 2], [6, 3]],
+    [[3, 0], [2, 1], [1, 2], [0, 3]],
+    [[4, 0], [3, 1], [2, 2], [1, 3]],
+    [[3, 1], [2, 2], [1, 3], [0, 4]],
+    [[5, 0], [4, 1], [3, 2], [2, 3]],
+    [[4, 1], [3, 2], [2, 3], [1, 4]],
+    [[3, 2], [2, 3], [1, 4], [0, 5]],
+    [[6, 0], [5, 1], [4, 2], [3, 3]],
+    [[5, 1], [4, 2], [3, 3], [2, 4]],
+    [[4, 2], [3, 3], [2, 4], [1, 5]],
+    [[6, 1], [5, 2], [4, 3], [3, 4]],
+    [[5, 2], [4, 3], [3, 4], [2, 5]],
+    [[6, 2], [5, 3], [4, 4], [3, 5]],
+  ];
+  // Loop over all of the patterns that would win the game
+  for(var pidx = 0; pidx < winning_patterns.length; pidx++){
+    // Get the current pattern to check for
+    var pattern = winning_patterns[pidx];
+
+    // Select the user in the current slot
+    var winner = state[pattern[0][0]][pattern[0][1]];
+    // If the first record in the pattern has a value then test the pattern
+    // If there is no player in that area there is no reason to test
+    if(winner){
+      // Loop over the patterns other slots
+      for(var idx = 1; idx < pattern.length; idx++){
+        // If the winner is not equal to the player in the slot then that is not a winning pattern
+        if(winner != state[pattern[idx][0]][pattern[idx][1]]) {
+          // Set the winner to undefined and break the loop so it moves on the the next pattern
+          winner = undefined;
+          break;
+        }
+      }
+      // Check that the winner is still present
+      if(winner){
+        // return the winner value to the place it was called
+        return winner;
+      }
+    }
+  }
+    // Initiall set it to true
+    var draw = true;
+    // Loop over all of the columns
+    for(var x = 0; x <= 6; x++){
+      // Loop over all of the rows
+      for(var y = 0; y <= 5; y++){
+        // If one does not have a value then the game is still in motion
+        if(!state[x][y]){
+          // Return undefined to the place the method was called
+          // This will initcate that the game is still active
+          return undefined;
+        }
+      }
+    }
+    // Return a blank string. This will show it has been drawn.
+    return '';
+}
+
+/*
+  This method will try and find the best move for the computer
+  to make it harder for the player
+*/
+
+function minimax(state, limit, player){
+  var moves = [];
+
+  if(limit > 0){
+    for(var idx1 = 0; idx1 < 7; idx1++){
+      for(var idx2 = 0; idx2 < 6; idx2++){
+        if(state[idx1][idx2] === undefined){
+          var move = {
+            x: idx1,
+            y: idx2,
+            state: deepClone(state),
+            score: 0
+          };
+
+          move.state[idx1][idx2] = player;
+
+          if(limit === 1 || check_game_winner(move.state) !== undefined) {
+            if(check_game_winner(move.state) !== undefined) {
+              var winner = check_game_winner(move.state);
+              if(winner === 'yellow') {
+                move.score = 1000;
+              } else if(winner === 'red') {
+                move.score = -1000;
+              }
+            }
+          } else {
+            move.moves = minimax(move.state, limit - 1, player === 'red' ? 'yellow' : 'red');
+            var score = undefined;
+
+            for(var idx3 = 0; idx3 < move.moves.length; idx3++){
+              if (score === undefined){
+                score = move.moves[idx3].score;
+              } else if(player === 'red') {
+                score = Math.max(score, move.moves[idx3].score);
+              } else if(player === 'yellow') {
+                score = Math.min(score, move.moves[idx3].score);
+              }
+            }
+
+            move.score = score;
+          }
+
+          moves.push(move);
+        }
+      }
+    }
+  }
+
+  return moves;
+}
+
+function computer_move(state){
+  var moves = minimax(state, 3, 'yellow');
+  var max_score = undefined;
+  var move = undefined;
+
+  for(var idx = 0; idx < moves.length; idx++){
+    if(max_score === undefined || moves[idx].score > max_score) {
+      max_score = moves[idx].score;
+      move = {
+        x: moves[idx].x,
+        y: moves[idx].y
+      }
+    }
+  }
+
+  return move;
+}
+
 export default Component.extend({
   // Define data that will be used in to check the status and show different views on
   playing: false,
@@ -95,8 +303,10 @@ export default Component.extend({
     It will animate the counters being placed and make a sound
   */
   click: function(ev){
+    // set the component
+    var component = this;
     // Check that they are playing and that someone has not won yet
-    if(this.get('playing') && !this.get('winner')){
+    if(component.get('playing') && !component.get('winner')){
       // Ensure that the click is in the canvas and not elsewhere on
       // the page
       if(
@@ -111,15 +321,14 @@ export default Component.extend({
         var x = Math.floor(ev.offsetX / 60);
         var y = Math.floor(ev.offsetY / 60);
         // Get the stored state
-        var state = this.get('state');
+        var state = component.get('state');
         // Check if the move is a valid move
         if(!state[x][y]){
-          var player = this.get('player');
-          state[x][y] = player;
+          state[x][y] = 'red';
           // Get the number of move it is
-          var moveCounter = this.get('moves')[player];
+          var moveCounter = component.get('moves')['red'];
           // Get a counter to move to the correct location
-          var counter = this.get('counters')[player][moveCounter];
+          var counter = component.get('counters')['red'][moveCounter];
 
           // Move the counter to the correct location
           counter.x = (x * 60) + 30
@@ -131,148 +340,52 @@ export default Component.extend({
           createjs.Sound.play("dropping");
 
           // Check for the winner
-          this.check_winner();
+          component.check_winner();
 
           // Increment that players move
-          this.get('moves')[player] = moveCounter + 1;
+          component.get('moves')['red'] = moveCounter + 1;
 
-          // Swap the players move from red to yellow and yellow to red
-          if(player == 'red') {
-            this.set('player', 'yellow');
-          } else {
-            this.set('player', 'red');
-          }
+          setTimeout(function(){
+            if(!component.get('winner') && !component.get('draw')){
+              var move = computer_move(state);
+              moveCounter = component.get('moves')['yellow'];
+              state[move.x][move.y] = 'yellow';
+              counter = component.get('counters')['yellow'][moveCounter];
+              counter.x = (move.x * 60) + 30;
+              counter.y = (move.y * 60) + 30;
+              counter.visible = true;
+              createjs.Tween.get(counter).to({alpha: 1}, 500);
+              createjs.Sound.play("dropping");
+              component.get('moves')['yellow'] = moveCounter + 1;
+              component.get('stage').update();
+              component.check_winner();
+            }
+          }, 500);
         }
       }
     }
   },
 
   /*
-    This method will try and find the winner of the game or
-    return a draw if all the slots have been filled.
+    This method will find and set the winner, or set it as a draw if all
+    the slots have been filled
   */
 
   check_winner: function(){
-    // These are all the ways that a player could win
-    var winning_patterns = [
-      [[0, 0], [0, 1], [0, 2], [0, 3]],
-      [[0, 1], [0, 2], [0, 3], [0, 4]],
-      [[0, 2], [0, 3], [0, 4], [0, 5]],
-      [[0, 3], [0, 4], [0, 5], [0, 6]],
-      [[1, 0], [1, 1], [1, 2], [1, 3]],
-      [[1, 1], [1, 2], [1, 3], [1, 4]],
-      [[1, 2], [1, 3], [1, 4], [1, 5]],
-      [[1, 3], [1, 4], [1, 5], [1, 6]],
-      [[2, 0], [2, 1], [2, 2], [2, 3]],
-      [[2, 1], [2, 2], [2, 3], [2, 4]],
-      [[2, 2], [2, 3], [2, 4], [2, 5]],
-      [[2, 3], [2, 4], [2, 5], [2, 6]],
-      [[3, 0], [3, 1], [3, 2], [3, 3]],
-      [[3, 1], [3, 2], [3, 3], [3, 4]],
-      [[3, 2], [3, 3], [3, 4], [3, 5]],
-      [[3, 3], [3, 4], [3, 5], [3, 6]],
-      [[4, 0], [4, 1], [4, 2], [4, 3]],
-      [[4, 1], [4, 2], [4, 3], [4, 4]],
-      [[4, 2], [4, 3], [4, 4], [4, 5]],
-      [[4, 3], [4, 4], [4, 5], [4, 6]],
-      [[5, 0], [5, 1], [5, 2], [5, 3]],
-      [[5, 1], [5, 2], [5, 3], [5, 4]],
-      [[5, 2], [5, 3], [5, 4], [5, 5]],
-      [[5, 3], [5, 4], [5, 5], [5, 6]],
-      [[0, 0], [1, 0], [2, 0], [3, 0]],
-      [[1, 0], [2, 0], [3, 0], [4, 0]],
-      [[2, 0], [3, 0], [4, 0], [5, 0]],
-      [[0, 1], [1, 1], [2, 1], [3, 1]],
-      [[1, 1], [2, 1], [3, 1], [4, 1]],
-      [[2, 1], [3, 1], [4, 1], [5, 1]],
-      [[0, 2], [1, 2], [2, 2], [3, 2]],
-      [[1, 2], [2, 2], [3, 2], [4, 2]],
-      [[2, 2], [3, 2], [4, 2], [5, 2]],
-      [[0, 3], [1, 3], [2, 3], [3, 3]],
-      [[1, 3], [2, 3], [3, 3], [4, 3]],
-      [[2, 3], [3, 3], [4, 3], [5, 3]],
-      [[0, 4], [1, 4], [2, 4], [3, 4]],
-      [[1, 4], [2, 4], [3, 4], [4, 4]],
-      [[2, 4], [3, 4], [4, 4], [5, 4]],
-      [[0, 5], [1, 5], [2, 5], [3, 5]],
-      [[1, 5], [2, 5], [3, 5], [4, 5]],
-      [[2, 5], [3, 5], [4, 5], [5, 5]],
-      [[0, 6], [1, 6], [2, 6], [3, 6]],
-      [[1, 6], [2, 6], [3, 6], [4, 6]],
-      [[2, 6], [3, 6], [4, 6], [5, 6]],
-      [[0, 2], [1, 3], [2, 4], [3, 5]],
-      [[0, 1], [1, 2], [2, 3], [3, 4]],
-      [[1, 2], [2, 3], [3, 4], [4, 5]],
-      [[0, 0], [1, 1], [2, 2], [3, 3]],
-      [[1, 1], [2, 2], [3, 3], [4, 4]],
-      [[2, 2], [3, 3], [4, 4], [5, 5]],
-      [[1, 0], [2, 1], [3, 2], [4, 3]],
-      [[2, 1], [3, 2], [4, 3], [5, 4]],
-      [[3, 2], [4, 3], [5, 4], [6, 5]],
-      [[2, 0], [3, 1], [4, 2], [5, 3]],
-      [[3, 1], [4, 2], [5, 3], [6, 4]],
-      [[3, 0], [4, 1], [5, 2], [6, 3]],
-      [[3, 0], [2, 1], [1, 2], [0, 3]],
-      [[4, 0], [3, 1], [2, 2], [1, 3]],
-      [[3, 1], [2, 2], [1, 3], [0, 4]],
-      [[5, 0], [4, 1], [3, 2], [2, 3]],
-      [[4, 1], [3, 2], [2, 3], [1, 4]],
-      [[3, 2], [2, 3], [1, 4], [0, 5]],
-      [[6, 0], [5, 1], [4, 2], [3, 3]],
-      [[5, 1], [4, 2], [3, 3], [2, 4]],
-      [[4, 2], [3, 3], [2, 4], [1, 5]],
-      [[6, 1], [5, 2], [4, 3], [3, 4]],
-      [[5, 2], [4, 3], [3, 4], [2, 5]],
-      [[6, 2], [5, 3], [4, 4], [3, 5]],
-    ];
-    // Grab the current state
+    // Get the state of the board
     var state = this.get('state');
-    // Loop over all of the patterns that would win the game
-    for(var pidx = 0; pidx < winning_patterns.length; pidx++){
-      // Get the current pattern to check for
-      var pattern = winning_patterns[pidx];
-
-      // Select the user in the current slot
-      var winner = state[pattern[0][0]][pattern[0][1]];
-      // If the first record in the pattern has a value then test the pattern
-      // If there is no player in that area there is no reason to test
-      if(winner){
-        // Loop over the patterns other slots
-        for(var idx = 1; idx < pattern.length; idx++){
-          // If the winner is not equal to the player in the slot then that is not a winning pattern
-          if(winner != state[pattern[idx][0]][pattern[idx][1]]) {
-            // Set the winner to undefined and break the loop so it moves on the the next pattern
-            winner = undefined;
-            break;
-          }
-        }
-        // Check that the winner is still present
-        if(winner){
-          // Set the global variable to be the correct winner
-          this.set('winner', winner);
-          // Break the loop as a winner has been found
-          break;
-        }
+    // Find the winner using the check_game_winner method passing in the
+    // current state
+    var winner = check_game_winner(state);
+    // If undefined the game continues, not action required
+    if(winner !== undefined){
+      // if the value is blank then it is a draw
+      if(winner === ''){
+        this.set('draw', true);
+      } else {
+        // Anything else set it as the winner, this will end the game
+        this.set('winner', winner);
       }
-    }
-    // If there is no winner, check for a draw
-    if(!this.get('winner')){
-      // Initiall set it to true
-      var draw = true;
-      // Loop over all of the columns
-      for(var x = 0; x <= 6; x++){
-        // Loop over all of the rows
-        for(var y = 0; y <= 5; y++){
-          // If one does not have a value then the game is still in motion
-          if(!state[x][y]){
-            // Set draw to false and break the rows loop
-            draw = false;
-            break;
-          }
-        }
-      }
-      // Set the draw value to be be the same as the variable
-      this.set('draw', draw);
     }
   },
 
@@ -308,7 +421,7 @@ export default Component.extend({
       // Set the playing, winner and draw value to the playable states
       this.set('playing', true);
       this.set('winner', undefined);
-      this.set('draw', false);
+      this.set('draw', undefined);
     }
   }
 });

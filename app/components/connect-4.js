@@ -1,6 +1,33 @@
 import Component from '@ember/component';
 
 /*
+  This method will be used to select the available position for each column
+*/
+function available_positins(state){
+  var positions = [];
+  for(var x = 0; x < state.length; x++){
+    for(var y = 0; y < state.length; y++){
+      if(y + 1 === state[x].length || state[x][y + 1] !== undefined) {
+        positions.push([x, y]);
+        break;
+      }
+    }
+  }
+  return positions;
+}
+
+function select_position(state, column) {
+  var positions = available_positins(state);
+
+  for(var position = 0; position < positions.length; position++){
+    if(positions[position][0] === column){
+      return positions[position];
+    }
+  }
+  return undefined;
+}
+
+/*
   This method will clone the current state so that the computer player
   can make a better move
 */
@@ -276,54 +303,56 @@ function minimax(state, limit, player){
   // If the limit is less than one then the computers predictions have reached the end of the line
   if(limit > 0){
     // Loop over all of the X axis for the state, which is the reason x is being used as the variable
-    for(var x = 0; x < state.length; x++){
-      // Loop over the Y axis, which is why Y is being used as the variable name
-      for(var y = 0; y < state[x].length; y++){
-        // Check to see if the slot in the state is undefined
-        if(state[x][y] === undefined){
-          /*
-           Create the key value array for this being a potential move
-           set the X and Y co-ordinates, clone the state and set the score to 0
-          */
-          var move = {
-            x: x,
-            y: y,
-            state: deepClone(state),
-            score: 0
-          };
-          // In the cloned state set it to be the player defined int he
-          move.state[x][y] = player;
+    var positions_available = available_positins(state);
 
-          // If the limit is one or the there is a result from the check winner method fetch the score
-          if(limit === 1 || check_game_winner(move.state) !== undefined) {
-            // use the heuristic method to get the score
-            move.score = heuristic(move.state);
-          } else { // otherwise reccusivley generate a potential win by simulating the next turn
-            // Store the potential moves into its own array within the already defined key value array
-            move.moves = minimax(move.state, limit - 1, player === 'red' ? 'yellow' : 'red');
-            // Keep the score undefined for now
-            var score = undefined;
+    for(var position = 0; position < positions_available.length; position++){
+      var x = positions_available[position][0];
+      var y = positions_available[position][1];
 
-            // Loop over all of the moves that have been found, the variable here is m, standing for move
-            for(var m = 0; m < move.moves.length; m++){
-              if (score === undefined){
-                // if the score is undefined this should be set the the score value from the move in the m position
-                score = move.moves[m].score;
-              } else if(player === 'red') {
-                // if the player is red (user) then select which is the biggest from the current score or the score from the move in the m position
-                score = Math.max(score, move.moves[m].score);
-              } else if(player === 'yellow') {
-                // However, if it is the computer then the smallest score will need to be selected
-                score = Math.min(score, move.moves[m].score);
-              }
+      // Check to see if the slot in the state is undefined
+      if(state[x][y] === undefined){
+        /*
+         Create the key value array for this being a potential move
+         set the X and Y co-ordinates, clone the state and set the score to 0
+        */
+        var move = {
+          x: x,
+          y: y,
+          state: deepClone(state),
+          score: 0
+        };
+        // In the cloned state set it to be the player defined int he
+        move.state[x][y] = player;
+
+        // If the limit is one or the there is a result from the check winner method fetch the score
+        if(limit === 1 || check_game_winner(move.state) !== undefined) {
+          // use the heuristic method to get the score
+          move.score = heuristic(move.state);
+        } else { // otherwise reccusivley generate a potential win by simulating the next turn
+          // Store the potential moves into its own array within the already defined key value array
+          move.moves = minimax(move.state, limit - 1, player === 'red' ? 'yellow' : 'red');
+          // Keep the score undefined for now
+          var score = undefined;
+
+          // Loop over all of the moves that have been found, the variable here is m, standing for move
+          for(var m = 0; m < move.moves.length; m++){
+            if (score === undefined){
+              // if the score is undefined this should be set the the score value from the move in the m position
+              score = move.moves[m].score;
+            } else if(player === 'red') {
+              // if the player is red (user) then select which is the biggest from the current score or the score from the move in the m position
+              score = Math.max(score, move.moves[m].score);
+            } else if(player === 'yellow') {
+              // However, if it is the computer then the smallest score will need to be selected
+              score = Math.min(score, move.moves[m].score);
             }
-            // Set the moves score as the value that has been found and stored in the score variable
-            move.score = score;
           }
-
-          // Append the move to the array of move moves that could be used
-          moves.push(move);
+          // Set the moves score as the value that has been found and stored in the score variable
+          move.score = score;
         }
+
+        // Append the move to the array of move moves that could be used
+        moves.push(move);
       }
     }
   }
@@ -474,64 +503,72 @@ export default Component.extend({
         // X and Y will be the position in each array. They will need to be divided
         // by the size of each counter in order to get the one they clicked
         var x = Math.floor(ev.offsetX / 60);
-        var y = Math.floor(ev.offsetY / 60);
+
+
         // Get the stored state
         var state = component.get('state');
-        // Check if the move is a valid move
-        if(!state[x][y]){
-          state[x][y] = 'red';
-          // Get the number of move it is
-          var moveCounter = component.get('moves')['red'];
-          // Get a counter to move to the correct location
-          var counter = component.get('counters')['red'][moveCounter];
 
-          // Move the counter to the correct location
-          counter.x = (x * 60) + 30
-          counter.y = (y * 60) + 30
-          // Make the counter visible
-          counter.visible = true;
-          // Fade the counter into the correct place
-          createjs.Tween.get(counter).to({alpha: 1}, 500);
-          createjs.Sound.play("dropping");
+        // Drop the components in the correct place
+        var position = select_position(state, x);
+        // Make sure that the coulmn has a valid position
+        if (position !== undefined){
+          var y = position[1]
+          // Check if the move is a valid move
+          if(!state[x][y]){
+            state[x][y] = 'red';
+            // Get the number of move it is
+            var moveCounter = component.get('moves')['red'];
+            // Get a counter to move to the correct location
+            var counter = component.get('counters')['red'][moveCounter];
 
-          // Check for the winner
-          component.check_winner();
+            // Move the counter to the correct location
+            counter.x = (x * 60) + 30
+            counter.y = (y * 60) + 30
+            // Make the counter visible
+            counter.visible = true;
+            // Fade the counter into the correct place
+            createjs.Tween.get(counter).to({alpha: 1}, 500);
+            createjs.Sound.play("dropping");
 
-          // Increment that players move
-          component.get('moves')['red'] = moveCounter + 1;
+            // Check for the winner
+            component.check_winner();
 
-          // The computer should only play if there is a winner
-          if(!component.get('winner') && !component.get('draw')){
-            /*
-              The setTimeout will add some time to the computers move.
-              This will make it feel like they are playing a human
-            */
-            setTimeout(function(){
-              // Get the computers move that has been picked by the computer move method
-              var move = computer_move(state);
-              // Get the number of moves to select the counter to move
-              // The computer will always be yellow
-              moveCounter = component.get('moves')['yellow'];
-              // Set the board state to set the selected slot to be the computer player
-              state[move.x][move.y] = 'yellow';
-              // Select the counter that will need to be moved on the grid
-              counter = component.get('counters')['yellow'][moveCounter];
-              // Set the correct co-ordinates for the counter for the selected slot
-              counter.x = (move.x * 60) + 30;
-              counter.y = (move.y * 60) + 30;
-              // Make the counter visable
-              counter.visible = true;
-              // Fade the counter in using the Tween package
-              createjs.Tween.get(counter).to({alpha: 1}, 500);
-              // Make the sound of dropping when placing the counter
-              createjs.Sound.play("dropping");
-              // Increment he move counter so that the next counter is selected
-              component.get('moves')['yellow'] = moveCounter + 1;
-              // Update the stage to show a the counters that are being displayed
-              component.get('stage').update();
-              // Check for the winner again incase the computer is the winner
-              component.check_winner();
-            }, 500);
+            // Increment that players move
+            component.get('moves')['red'] = moveCounter + 1;
+
+            // The computer should only play if there is a winner
+            if(!component.get('winner') && !component.get('draw')){
+              /*
+                The setTimeout will add some time to the computers move.
+                This will make it feel like they are playing a human
+              */
+              setTimeout(function(){
+                // Get the computers move that has been picked by the computer move method
+                var move = computer_move(state);
+                // Get the number of moves to select the counter to move
+                // The computer will always be yellow
+                moveCounter = component.get('moves')['yellow'];
+                // Set the board state to set the selected slot to be the computer player
+                state[move.x][move.y] = 'yellow';
+                // Select the counter that will need to be moved on the grid
+                counter = component.get('counters')['yellow'][moveCounter];
+                // Set the correct co-ordinates for the counter for the selected slot
+                counter.x = (move.x * 60) + 30;
+                counter.y = (move.y * 60) + 30;
+                // Make the counter visable
+                counter.visible = true;
+                // Fade the counter in using the Tween package
+                createjs.Tween.get(counter).to({alpha: 1}, 500);
+                // Make the sound of dropping when placing the counter
+                createjs.Sound.play("dropping");
+                // Increment he move counter so that the next counter is selected
+                component.get('moves')['yellow'] = moveCounter + 1;
+                // Update the stage to show a the counters that are being displayed
+                component.get('stage').update();
+                // Check for the winner again incase the computer is the winner
+                component.check_winner();
+              }, 500);
+            }
           }
         }
       }

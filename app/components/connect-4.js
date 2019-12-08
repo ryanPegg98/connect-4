@@ -3,7 +3,7 @@ import Component from '@ember/component';
 /*
   This method will be used to select the available position for each column
 */
-function available_positins(state){
+function available_positions(state){
   var positions = [];
   for(var x = 0; x < state.length; x++){
     for(var y = 0; y < state.length; y++){
@@ -17,7 +17,7 @@ function available_positins(state){
 }
 
 function select_position(state, column) {
-  var positions = available_positins(state);
+  var positions = available_positions(state);
 
   for(var position = 0; position < positions.length; position++){
     if(positions[position][0] === column){
@@ -337,7 +337,7 @@ function minimax(state, limit, player){
   // If the limit is less than one then the computers predictions have reached the end of the line
   if(limit > 0){
     // Loop over all of the X axis for the state, which is the reason x is being used as the variable
-    var positions_available = available_positins(state);
+    var positions_available = available_positions(state);
 
     for(var position = 0; position < positions_available.length; position++){
       var x = positions_available[position][0];
@@ -577,12 +577,18 @@ export default Component.extend({
                 This will make it feel like they are playing a human
               */
               setTimeout(function(){
-                // Get the computers move that has been picked by the computer move method
-                var move = computer_move(state);
                 // Get the number of moves to select the counter to move
                 // The computer will always be yellow
                 moveCounter = component.get('moves')['yellow'];
                 // Set the board state to set the selected slot to be the computer player
+                if (moveCounter > 0) {
+                  // Get the computers move that has been picked by the computer move method
+                  var move = computer_move(state);
+                } else {
+                  var positions = available_positions(state);
+                  var position = positions[Math.floor(Math.random() * positions.length)];
+                  var move = { x: position[0], y: position[1] };
+                }
                 state[move.x][move.y] = 'yellow';
                 // Select the counter that will need to be moved on the grid
                 counter = component.get('counters')['yellow'][moveCounter];
@@ -601,7 +607,7 @@ export default Component.extend({
                 component.get('stage').update();
                 // Check for the winner again incase the computer is the winner
                 component.check_winner();
-              }, 500);
+              }, Math.round(Math.random() * 2000)); // Randomise the time it takes for the compuer to move
             }
           }
         }

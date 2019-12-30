@@ -4,9 +4,19 @@
 <div class="game_board">
   <canvas id="stage" width="420" height="360"></canvas>
   {{#if playing}}
+    <div class="winner_screen hidden" id="computer_move">
+      <div class="center_text">
+        <p class="yellow">The computer is thinking</p>
+      </div>
+    </div>
+    <div class="winner_screen hidden" id="your_turn">
+      <div class="center_text">
+        <p class="red">Your turn</p>
+      </div>
+    </div>
     {{#if winner}}
       <div class="winner_screen">
-        <p class="{{ winner }}">{{ winner }}</p>
+        <p class={{ winner }}>{{ winner }}</p>
         <p>won!</p>
       </div>
     {{/if}}

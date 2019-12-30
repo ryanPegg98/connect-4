@@ -439,6 +439,8 @@ export default Component.extend({
     this._super(...arguments);
     createjs.Sound.registerSound("assets/sounds/dropping.wav", "dropping");
     createjs.Sound.registerSound("assets/sounds/woosh.wav", "woosh");
+    createjs.Sound.registerSound("assets/sounds/fail.wav", "fail");
+    createjs.Sound.registerSound("assets/sounds/success.wav", "success");
   },
 
   /*
@@ -572,6 +574,9 @@ export default Component.extend({
 
             // The computer should only play if there is a winner
             if(!component.get('winner') && !component.get('draw')){
+              var jquery = this // This will be used to use jQuery methods
+              // fade the computer move screen over the top of the board to stop a user pressing the board
+              jquery.$("#computer_move").fadeIn(200);
               /*
                 The setTimeout will add some time to the computers move.
                 This will make it feel like they are playing a human
@@ -581,13 +586,14 @@ export default Component.extend({
                 // The computer will always be yellow
                 moveCounter = component.get('moves')['yellow'];
                 // Set the board state to set the selected slot to be the computer player
+                var move = undefined;
                 if (moveCounter > 0) {
                   // Get the computers move that has been picked by the computer move method
-                  var move = computer_move(state);
+                  move = computer_move(state);
                 } else {
                   var positions = available_positions(state);
                   var position = positions[Math.floor(Math.random() * positions.length)];
-                  var move = { x: position[0], y: position[1] };
+                  move = { x: position[0], y: position[1] };
                 }
                 state[move.x][move.y] = 'yellow';
                 // Select the counter that will need to be moved on the grid
@@ -607,6 +613,22 @@ export default Component.extend({
                 component.get('stage').update();
                 // Check for the winner again incase the computer is the winner
                 component.check_winner();
+                // So long as the winner has not been set, let the user know it is their turn
+                if (component.get('winner') === undefined){
+                  // Fade the computer move screen out of site
+                  jquery.$("#computer_move").fadeOut(200, function(){
+                    // Once the computer thinking screen has been hidden fade the user screen in so they can know it is their turn
+                    jquery.$("#your_turn").fadeIn(200, function(){
+                      // Once the the screen has faded only show it for so long before it fades out again
+                      setTimeout(function(){
+                        // Fade the your turn screen out once the time out has finished
+                        jquery.$("#your_turn").fadeOut(200);
+                      }, 300)
+                    })
+                  });
+                } else {
+                  jquery.$("#computer_move").fadeOut(200);
+                }
               }, Math.round(Math.random() * 2000)); // Randomise the time it takes for the compuer to move
             }
           }
@@ -634,6 +656,11 @@ export default Component.extend({
       } else {
         // Anything else set it as the winner, this will end the game
         this.set('winner', winner);
+        if(winner === "red"){
+          createjs.Sound.play("success");
+        } else {
+          createjs.Sound.play("fail");
+        }
       }
     }
   },

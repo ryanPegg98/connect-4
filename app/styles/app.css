@@ -10,6 +10,7 @@ BODY {
   margin: 0;
 }
 
+/* Use CSS Grid to layout the application */
 SECTION > DIV {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
@@ -20,6 +21,7 @@ SECTION > DIV {
   margin: 0 auto;
 }
 
+/* Header will need to be dark blue with large white text as it will be the logo */
 HEADER {
   grid-column: 1 / 7;
   grid-row: 1;
@@ -39,6 +41,7 @@ HEADER H1 {
   padding: 20px;
 }
 
+/* The game board will be the element the board is placed within so it will need to be white */
 .game_board {
   grid-column: 1 / 7;
   grid-row: 2;
@@ -57,16 +60,19 @@ HEADER H1 {
   background-color: #EFEFEF;
 }
 
+/*
+  The winner screen will always appear over the top of the game board as it will be
+  used to stop the player from clicking on the board
+*/
 .winner_screen {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-
   background-color: rgba(0, 0, 0, 0.7);
   color: #FFF;
-  font-size: 2.5em;
+  font-size: 3em;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -74,9 +80,25 @@ HEADER H1 {
   text-shadow: 0px 0px 20px #000;
 }
 
+.winner_screen.hidden {
+  display: none;
+}
+
 .winner_screen > P {
   text-align: center;
   margin: 0;
+}
+
+.center_text {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.center_text > P {
+  text-align: center;
 }
 
 .red {
@@ -89,6 +111,10 @@ HEADER H1 {
   text-transform: capitalize;
 }
 
+/*
+  The button will be at the bottom of the screen and it will be used as the start
+  and restart button
+*/
 BUTTON {
   grid-column: 1 / 7;
   grid-row: 3;
@@ -105,6 +131,10 @@ BUTTON {
   border-color: #ffb200;
 }
 
+/*
+  This will be what the counters will be placed onto. This will need to be blue
+  with round corners
+*/
 CANVAS {
   background-color: #1564b9;
   border: 5px solid #1564b9;
@@ -112,6 +142,11 @@ CANVAS {
   box-sizing: border-box;
 }
 
+/*
+  When the device is in landscape mode the logo and the button will need to be
+  to the left and the board will need to be to the right. Therefore, the grid
+  will need to be altered.
+*/
 @media all and (orientation: landscape) {
   SECTION > DIV {
     grid-template-rows: 1fr 1fr 1fr;
@@ -133,9 +168,26 @@ CANVAS {
   }
 }
 
+/*
+  For larger devices they will need to see the game more central and more like
+  the portrait mode so the grid will need to be altered again.
+*/
+
 @media all and (min-width: 800px) {
+  SECTION {
+    max-height: 700px;
+    max-width: 500px;
+    border-radius: 10px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    overflow: hidden;
+  }
+
   SECTION > DIV {
-    grid-template-rows: 15vh auto 10vh;
+    grid-template-rows: 150px 450px 100px;
+    width: 100%;
   }
 
   HEADER {
